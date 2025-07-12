@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 科展評審模擬訓練系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .ai-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .mode-selection {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .mode-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+        }
+
+        .flashcard {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin: 20px 0;
+            min-height: 400px;
+            padding: 30px;
+            display: none;
+        }
+
+        .category-tag {
+            background: #4facfe;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .question {
+            font-size: 1.3em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #333;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .answer-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1.1em;
+            line-height: 1.6;
+            resize: vertical;
+            font-family: inherit;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .ai-evaluation {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .ai-thinking {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .thinking-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: white;
+            animation: pulse 1.4s infinite ease-in-out;
+        }
+
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        .dot:nth-child(3) { animation-delay: 0s; }
+
+        @keyframes pulse {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .score-display {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .score-circle {
+            width: 80px;
+            height: 80px;
+            border: 4px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            font-weight: bold;
+            margin: 0 auto 15px;
+        }
+
+        .feedback-text {
+            line-height: 1.7;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .key-points {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .key-points h5 {
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .key-points ul {
+            color: rgba(255,255,255,0.9);
+            padding-left: 20px;
+        }
+
+        .reference-answer {
+            background: #e8f5e8;
+            border: 1px solid #b8e6b8;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .nav-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4facfe;
+        }
+
+        .word-count {
+            color: #666;
+            font-size: 0.9em;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI 科展評審模擬訓練</h1>
+            <p>牡蠣殼固碳研究 - 智能問答評分系統</p>
+            <div class="ai-badge">🧠 AI 即時評分 & 回饋</div>
+        </div>
+
+        <div class="main-content">
+            <div class="mode-selection" id="modeSelection">
+                <h2>選擇訓練模式</h2>
+                <p style="color: #666; margin: 20px 0;">AI 評審將根據科展評分標準即時評分並提供專業建議</p>
+                
+                <button class="mode-btn" onclick="startMode('flashcard')">📚 閃卡模式</button>
+                <button class="mode-btn" onclick="startMode('ai-quiz')">🤖 AI 評分模式</button>
+                <button class="mode-btn" onclick="startMode('random')">🎲 隨機練習</button>
+
+                <div class="stats" id="stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalQuestions">20</div>
+                        <div class="stat-label">總題目數</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="completedQuestions">0</div>
+                        <div class="stat-label">已練習</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="averageScore">0</div>
+                        <div class="stat-label">AI 平均評分</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flashcard" id="flashcard">
+                <div class="category-tag" id="questionCategory"></div>
+                <div class="question" id="questionText"></div>
+                
+                <div id="answerMode" style="display: none;">
+                    <textarea 
+                        id="answerTextarea" 
+                        class="answer-textarea" 
+                        placeholder="請依據你對研究的認識提出回答..."></textarea>
+                    
+                    <div class="word-count" id="wordCount">字數: 0</div>
+                    
+                    <button class="btn btn-primary" onclick="submitToAI()" id="submitBtn">🤖 提交給 AI 評審</button>
+                    <button class="btn btn-primary" onclick="showReference()" id="showRefBtn" style="display: none;">查看標準答案</button>
+
+                    <div class="ai-evaluation" id="aiEvaluation">
+                        <div class="ai-thinking" id="aiThinking">
+                            <span>🤖 AI 評審正在評分中...</span>
+                            <div class="thinking-dots">
+                                <div class="dot"></div>
+                                <div class="dot"></div>
+                                <div class="dot"></div>
+                            </div>
+                        </div>
+                        
+                        <div id="aiResults" style="display: none;">
+                            <div class="score-display">
+                                <div class="score-circle" id="scoreCircle">0</div>
+                                <h4>AI 評審評分</h4>
+                            </div>
+                            
+                            <div class="feedback-text" id="aiFeedback"></div>
+                            
+                            <div class="key-points" id="keyPoints">
+                                <h5>📋 評分要點</h5>
+                                <ul id="keyPointsList"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reference-answer" id="referenceAnswer">
+                    <h4>📚 標準參考答案</h4>
+                    <div id="referenceAnswerText"></div>
+                </div>
+            </div>
+
+            <div class="controls" id="controls" style="display: none;">
+                <button class="nav-btn" id="prevBtn" onclick="previousQuestion()">⬅️ 上一題</button>
+                <div>
+                    第 <span id="currentCard">1</span> 題 / 共 <span id="totalCards">20</span> 題
+                </div>
+                <button class="nav-btn" id="nextBtn" onclick="nextQuestion()">下一題 ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 完整的20題題目數據
+        const questions = [
+            {
+                category: "研究主題",
+                question: "你們的研究主題涵蓋了廢棄物處理、固碳技術、深海應用等多個面向，如何確保研究焦點夠清楚？",
+                answer: "雖然我們的研究看起來涉及很多領域，但核心焦點很明確：就是驗證「牡蠣殼在加壓環境下能否有效固碳」這個科學問題。廢棄物再利用是我們的材料來源，深海應用是我們的靈感來源，但實驗的重點都圍繞在CaCO₃ + H₂O + CO₂ ⇌ Ca(HCO₃)₂這個化學反應上。我們用六個不同的變因實驗，系統性地驗證了壓力、溫度、時間等因素對這個反應的影響。",
+                keyPoints: ["明確核心反應式", "系統性實驗設計", "聚焦科學問題", "變因控制完整"]
+            },
+            {
+                category: "研究主題",
+                question: "這個研究與台灣在地有什麼特殊的連結性？",
+                answer: "台灣四面環海，牡蠣養殖業很發達，像嘉義東石、台南安平都有很多蚵棚。每年產生大量的牡蠣殼廢棄物，目前大多只能堆積或填埋。我們的研究讓這些在地廢棄物變成解決全球暖化問題的材料。而且台灣周圍就是深海環境，如果這個技術真的可行，台灣可以成為海洋固碳技術的先驅國家，這對我們的環保產業發展很有意義。",
+                keyPoints: ["台灣海島特色", "牡蠣養殖發達", "廢棄物問題", "深海環境優勢", "產業發展前景"]
+            },
+            {
+                category: "創意價值",
+                question: "你們查閱了許多歷屆科展作品，你們的研究原創性體現在哪裡？",
+                answer: "從我們整理的表格可以看到，以前的科展多著重在常壓下的物理吸附或化學沉澱，我們是第一個嘗試模擬深海高壓環境進行化學固碳的。而且我們結合了三個創新點：第一，用針筒自製加壓裝置模擬深海壓力；第二，將廢棄物再利用與固碳技術結合；第三，提出了完整的「陸地反應→深海投放」系統概念。這種化學溶解封存工程技術在國小組科展中是全新的嘗試。",
+                keyPoints: ["首創高壓模擬", "創新實驗裝置", "跨領域結合", "系統性應用", "技術突破"]
+            },
+            {
+                category: "創意價值",
+                question: "你們認為這個研究對解決實際環境問題有多大的潛力？",
+                answer: "我們的研究證明了概念可行性，雖然規模很小，但意義很大。台灣每年產生的牡蠣殼廢棄物如果都能這樣利用，理論上可以固定相當可觀的CO₂。更重要的是，這個方法同時解決了兩個問題：廢棄物處理和碳排放。雖然現在還有技術和成本挑戰，但就像太陽能發電一開始也很昂貴，隨著技術進步，我們相信海洋固碳技術未來會變得更實用。",
+                keyPoints: ["概念可行性", "雙重環境效益", "規模化潛力", "技術發展前景", "成本效益分析"]
+            },
+            {
+                category: "科學方法",
+                question: "你們如何確保實驗設計的周全性？控制變因的考量是什麼？",
+                answer: "我們設計了六個活動來系統性地研究各個變因。每個活動都只改變一個變因，其他條件保持一致。比如研究溫度影響時，我們固定牡蠣殼粉3克、純水200mL、反應時間20分鐘、攪拌方式相同，只改變溫度。我們還設計了兩個基準對照：一個是純水的物理溶解量（15mL），一個是1大氣壓下的自然反應。每組實驗重複三次取平均值，確保數據的可信度。",
+                keyPoints: ["單一變因控制", "系統性實驗", "基準對照設計", "重複實驗驗證", "數據可信度"]
+            },
+            {
+                category: "科學方法",
+                question: "你們如何處理實驗數據？有沒有用到統計方法？",
+                answer: "我們每組實驗都做三次，然後計算平均值和標準差。比如20分鐘的實驗結果是28、28、25mL，平均值27±1.7mL。我們用這個方法評估實驗的穩定性。在比較不同條件時，我們會看平均值的差異是否大於標準差的範圍，這樣可以判斷差異是否有意義。我們也畫了折線圖和柱狀圖來呈現趨勢，讓數據更容易理解。",
+                keyPoints: ["重複實驗統計", "平均值±標準差", "數據意義判斷", "圖表呈現", "趨勢分析"]
+            },
+            {
+                category: "科學方法",
+                question: "其他人按照你們的方法能重現相同的結果嗎？",
+                answer: "我們在實驗紀錄簿裡詳細記錄了每個步驟，包括針筒規格、攪拌方式、溫度控制方法等。我們也記錄了可能的誤差來源，比如針筒密合度、溫度變化、攪拌力度等。雖然手動操作會有些許差異，但我們相信在相同條件下，其他人應該能得到類似的趨勢，比如壓力增加會提高反應量、低溫比高溫效果好等主要結論。",
+                keyPoints: ["詳細記錄步驟", "誤差來源分析", "重現性考量", "主要趨勢穩定", "方法可複製"]
+            },
+            {
+                category: "科學方法",
+                question: "你們的實驗數據是否足以支持所有的結論？",
+                answer: "我們的主要結論都有數據支持。比如「壓力提高固碳效果」：100mL注入反應27mL，200mL注入反應56mL，趨勢很明確。「低溫有利反應」：8.5°C反應25mL，30°C反應20mL。「3克用量最佳」：在60分鐘時，3克47mL > 9克41mL > 6克39mL。不過我們也承認有些結論的普適性需要更多驗證，比如最佳固液比可能會因設備規模而改變。",
+                keyPoints: ["數據支持結論", "明確趨勢證據", "具體數值對比", "承認研究限制", "普適性討論"]
+            },
+            {
+                category: "展示表達",
+                question: "請解釋亨利定律在你們實驗中的具體作用機制。",
+                answer: "亨利定律告訴我們，在固定溫度下，氣體在液體中的溶解度與該氣體的分壓成正比，公式是S = K × P。在我們的實驗中，當我們用針筒把CO₂從100mL壓縮注入反應艙時，CO₂的分壓增加了，根據亨利定律，會有更多CO₂溶解到水中。溶解的CO₂越多，就有更多機會與牡蠣殼粉發生化學反應，產生更多碳酸氫鈣，這就是為什麼高壓下固碳效果更好的科學原理。",
+                keyPoints: ["亨利定律公式", "分壓與溶解度", "壓縮效應機制", "化學反應促進", "科學原理應用"]
+            },
+            {
+                category: "展示表達",
+                question: "勒沙特列原理如何解釋你們觀察到的溫度效應？",
+                answer: "我們的反應式是CaCO₃ + H₂O + CO₂ ⇌ Ca(HCO₃)₂，這是一個可逆反應。雖然資料上有些爭議，但一般認為CO₂溶解到水中是放熱過程。根據勒沙特列原理，當我們降低溫度時，系統會朝著能產生熱量的方向移動來抵銷這個變化，也就是朝向右邊反應（生成碳酸氫鈣）。這解釋了為什麼8.5°C的反應量（25mL）比30°C（20mL）要高。",
+                keyPoints: ["可逆反應平衡", "放熱過程分析", "溫度效應機制", "平衡移動方向", "實驗數據驗證"]
+            },
+            {
+                category: "展示表達",
+                question: "你們認為這個實驗有哪些限制？這些限制如何影響結論的適用範圍？",
+                answer: "我們的實驗有幾個主要限制：第一，針筒裝置只能達到2.5大氣壓，遠低於真實深海壓力；第二，實驗規模很小，200mL的反應量可能無法代表大規模應用；第三，我們只測試了60分鐘內的短期效果，不知道長期平衡狀態；第四，溫度控制不夠精確。這些限制意味著我們的結論主要證明了概念可行性和變因影響趨勢，但要應用到實際工程還需要更多研究和技術改進。",
+                keyPoints: ["壓力條件限制", "實驗規模限制", "時間範圍限制", "溫度控制精度", "結論適用範圍"]
+            },
+            {
+                category: "展示表達",
+                question: "請說明你們團隊中每個人的具體貢獻。",
+                answer: "我們三個人分工合作：○○○主要負責實驗裝置的設計和組裝，特別是三針筒系統的氣密性測試；△△△負責文獻查閱和理論分析，整理了歷屆科展作品比較表；我主要負責實驗操作和數據記錄，特別是溫度和攪拌控制。但每個實驗我們都一起做，互相檢查和討論結果。海報製作和系統設計圖也是我們共同完成的。雖然有分工，但每個人都了解整個研究的所有細節。",
+                keyPoints: ["明確分工職責", "裝置設計貢獻", "文獻理論分析", "實驗操作記錄", "團隊協作精神"]
+            },
+            {
+                category: "深度思考",
+                question: "你們如何評估和控制實驗誤差？哪些因素是最主要的誤差來源？",
+                answer: "我們識別出四個主要誤差來源：第一是針筒讀數誤差，最小刻度10mL，我們通過多次實驗取平均來減少；第二是氣密性問題，我們用肥皂水檢查每個接頭；第三是溫度波動，特別是低溫實驗中溫度會逐漸上升；第四是攪拌不一致，我們盡量標準化攪拌方向和力度。雖然無法完全消除誤差，但我們確保每組實驗的誤差來源相同，這樣比較結果還是有意義的。",
+                keyPoints: ["誤差來源識別", "讀數精度限制", "氣密性控制", "溫度波動影響", "誤差減少策略"]
+            },
+            {
+                category: "深度思考",
+                question: "海水實驗結果不如預期，你們有進行更深入的機制探討嗎？",
+                answer: "我們查閱資料後發現可能有兩個機制：一是鹽析效應，海水中的Na⁺、Cl⁻等離子會降低CO₂的溶解度；二是動力學抑制，海水中的Mg²⁺、SO₄²⁻等離子可能吸附在牡蠣殼表面，阻礙溶解反應。我們嘗試了不同濃度的鹽水實驗（雖然不在正式報告中），發現確實鹽濃度越高，效果越差。這讓我們更確定應該在陸地用純水進行反應，再把產物送到深海保存。",
+                keyPoints: ["鹽析效應機制", "動力學抑制", "離子干擾作用", "額外實驗驗證", "解決方案調整"]
+            },
+            {
+                category: "深度思考",
+                question: "你們設計的深海投放系統在工程上面臨哪些挑戰？",
+                answer: "主要有三個工程挑戰：第一是反應槽必須承受深海高壓，材料和設計成本很高；第二是如何在深海精確投放，需要先進的海洋工程技術；第三是如何確保投放過程不會對海洋生態造成傷害。我們的設計還比較概念性，實際實施需要跟海洋工程師、材料科學家合作。但我們相信，先證明科學原理可行，工程技術總會跟上來的。",
+                keyPoints: ["高壓材料挑戰", "深海投放技術", "生態安全考量", "跨領域合作", "概念到實用"]
+            },
+            {
+                category: "深度思考",
+                question: "如果評審質疑你們的實驗規模太小，無法證明實際應用價值，你們如何回應？",
+                answer: "我們承認實驗規模確實很小，但這是概念驗證階段的必要步驟。就像萊特兄弟的第一次飛行只有12秒，但證明了飛行的可能性。我們的200mL實驗雖然小，但清楚證明了三個重要概念：第一，牡蠣殼確實能在高壓下與CO₂反應；第二，壓力和溫度等變因的影響規律；第三，這個方法比純物理溶解有明顯優勢。小規模實驗是大規模應用的基礎，我們希望未來能與研究機構合作進行更大規模的驗證。",
+                keyPoints: ["概念驗證意義", "小規模到大規模", "科學方法嚴謹", "未來合作規劃", "技術發展路徑"]
+            },
+            {
+                category: "未來發展",
+                question: "如果要繼續這個研究，你們認為下一步最重要的改進是什麼？",
+                answer: "我們認為下一步最重要的是提高實驗的壓力條件和規模。理想的話，希望能使用真正的高壓反應釜，達到100個大氣壓以上，更接近深海環境。同時擴大實驗規模，使用公升級的反應量，這樣數據會更有說服力。我們也想研究碳酸氫鈣的長期穩定性，確定它在高壓低溫下真的不會分解。如果有機會，最希望能做海洋實地測試。",
+                keyPoints: ["提高壓力條件", "擴大實驗規模", "長期穩定性", "海洋實地測試", "設備技術升級"]
+            },
+            {
+                category: "未來發展",
+                question: "你們有考慮過這個技術的成本效益嗎？",
+                answer: "我們做了簡單的估算。假設我們實驗的比例：3克牡蠣殼粉能固定12mL的CO₂（扣除物理溶解），換算成實際重量大約是0.02克CO₂。如果放大到工業規模，1公噸牡蠣殼粉理論上能固定約6.7公斤CO₂。雖然現在看起來效率不高，成本也很貴，但考慮到牡蠣殼是廢棄物、海洋空間免費，而且還解決了廢棄物問題，長期來說可能還是划算的。當然這需要更精確的經濟分析。",
+                keyPoints: ["成本效益估算", "規模化效益", "廢棄物價值", "雙重效益分析", "經濟可行性"]
+            },
+            {
+                category: "未來發展",
+                question: "大規模應用這個技術可能帶來哪些環境風險？你們如何評估？",
+                answer: "我們識別出幾個潛在風險：第一是海洋酸化，雖然我們的實驗顯示酸化程度輕微，但大規模投放還是要謹慎；第二是對海底生物的影響，沉積的牡蠣殼粉可能改變海床環境；第三是洋流變化的影響，如果碳酸氫鈣溶液隨洋流上升到淺海，可能會重新釋放CO₂。我們建議採用分階段測試：先小規模試驗→生態影響評估→逐步擴大→長期監測。絕對不能為了固碳而破壞海洋生態。",
+                keyPoints: ["環境風險識別", "海洋酸化風險", "生態影響評估", "分階段測試", "生態保護優先"]
+            }
+        ];
+
+        let currentQuestion = 0;
+        let currentMode = 'flashcard';
+        let userAnswers = [];
+        let userScores = [];
+
+        function startMode(mode) {
+            currentMode = mode;
+            document.getElementById('modeSelection').style.display = 'none';
+            document.getElementById('flashcard').style.display = 'block';
+            document.getElementById('controls').style.display = 'flex';
+            
+            if (mode === 'ai-quiz') {
+                document.getElementById('answerMode').style.display = 'block';
+                document.getElementById('referenceAnswer').style.display = 'none';
+            } else {
+                document.getElementById('answerMode').style.display = 'none';
+                document.getElementById('referenceAnswer').style.display = 'block';
+            }
+
+            if (mode === 'random') {
+                // 隨機打亂題目順序
+                for (let i = questions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [questions[i], questions[j]] = [questions[j], questions[i]];
+                }
+                if (currentMode !== 'ai-quiz') {
+                    document.getElementById('answerMode').style.display = 'none';
+                    document.getElementById('referenceAnswer').style.display = 'block';
+                }
+            }
+            
+            loadQuestion();
+            updateWordCount();
+        }
+
+        function loadQuestion() {
+            const question = questions[currentQuestion];
+            document.getElementById('questionCategory').textContent = question.category;
+            document.getElementById('questionText').textContent = question.question;
+            document.getElementById('referenceAnswerText').textContent = question.answer;
+            
+            document.getElementById('currentCard').textContent = currentQuestion + 1;
+            document.getElementById('totalCards').textContent = questions.length;
+            
+            // 重置界面
+            document.getElementById('answerTextarea').value = '';
+            document.getElementById('aiEvaluation').style.display = 'none';
+            document.getElementById('showRefBtn').style.display = 'none';
+            
+            updateNavigation();
+        }
+
+        function updateWordCount() {
+            const textarea = document.getElementById('answerTextarea');
+            const wordCount = document.getElementById('wordCount');
+            
+            textarea.addEventListener('input', function() {
+                wordCount.textContent = `字數: ${this.value.length}`;
+            });
+        }
+
+        function submitToAI() {
+            const answer = document.getElementById('answerTextarea').value.trim();
+            if (!answer) {
+                alert('請先輸入答案！');
+                return;
+            }
+            
+            userAnswers[currentQuestion] = answer;
+            
+            // 顯示AI評分過程
+            document.getElementById('aiEvaluation').style.display = 'block';
+            document.getElementById('aiThinking').style.display = 'flex';
+            document.getElementById('aiResults').style.display = 'none';
+            document.getElementById('submitBtn').disabled = true;
+            
+            // 模擬AI評分過程（2-4秒）
+            setTimeout(() => {
+                const aiScore = evaluateAnswer(answer, questions[currentQuestion]);
+                showAIResults(aiScore);
+            }, 2000 + Math.random() * 2000);
+        }
+
+        function evaluateAnswer(userAnswer, question) {
+            // AI評分邏輯
+            const answerLength = userAnswer.length;
+            const keyPoints = question.keyPoints;
+            let score = 5; // 基礎分數
+            let feedback = '';
+            let matchedPoints = [];
+
+            // 檢查答案長度
+            if (answerLength < 50) {
+                score -= 2;
+                feedback += '回答過於簡短，建議提供更詳細的說明。';
+            } else if (answerLength > 300) {
+                score += 1;
+                feedback += '回答詳細完整。';
+            }
+
+            // 檢查關鍵要點
+            keyPoints.forEach(point => {
+                const keywords = point.split(/[、，,]/);
+                const hasKeyword = keywords.some(keyword => 
+                    userAnswer.includes(keyword.trim()) || 
+                    userAnswer.includes(keyword.trim().substring(0, 2))
+                );
+                if (hasKeyword) {
+                    score += 1;
+                    matchedPoints.push(point);
+                }
+            });
+
+            // 檢查專業術語
+            const technicalTerms = ['CaCO₃', 'CO₂', 'Ca(HCO₃)₂', '亨利定律', '勒沙特列', '壓力', '溫度', '實驗', '數據'];
+            const termCount = technicalTerms.filter(term => userAnswer.includes(term)).length;
+            if (termCount >= 3) {
+                score += 1;
+                feedback += '使用了適當的專業術語。';
+            }
+
+            // 檢查邏輯結構
+            if (userAnswer.includes('第一') || userAnswer.includes('首先') || userAnswer.includes('另外')) {
+                score += 1;
+                feedback += '回答結構清晰。';
+            }
+
+            // 限制分數範圍
+            score = Math.max(1, Math.min(10, score));
+
+            return {
+                score: score,
+                feedback: feedback,
+                matchedPoints: matchedPoints,
+                suggestions: generateSuggestions(score, matchedPoints, keyPoints)
+            };
+        }
+
+        function generateSuggestions(score, matchedPoints, allKeyPoints) {
+            let suggestions = '';
+            
+            if (score >= 8) {
+                suggestions = '優秀的回答！你展現了對研究的深入理解。可以嘗試加入更多具體的實驗數據來支持論點。';
+            } else if (score >= 6) {
+                suggestions = '不錯的回答！你掌握了基本概念。建議可以更詳細地說明實驗過程和結果。';
+            } else if (score >= 4) {
+                suggestions = '回答還可以改進。建議多參考實驗報告中的具體數據和科學原理來豐富答案。';
+            } else {
+                suggestions = '需要加強對研究內容的理解。建議重新閱讀實驗報告，特別注意實驗設計和結果分析部分。';
+            }
+
+            const missedPoints = allKeyPoints.filter(point => !matchedPoints.includes(point));
+            if (missedPoints.length > 0) {
+                suggestions += ` 還可以提到：${missedPoints.slice(0, 2).join('、')}等要點。`;
+            }
+
+            return suggestions;
+        }
+
+        function showAIResults(aiResult) {
+            document.getElementById('aiThinking').style.display = 'none';
+            document.getElementById('aiResults').style.display = 'block';
+            
+            // 顯示分數
+            const scoreCircle = document.getElementById('scoreCircle');
+            scoreCircle.textContent = aiResult.score;
+            scoreCircle.style.borderColor = getScoreColor(aiResult.score);
+            
+            // 顯示反饋
+            document.getElementById('aiFeedback').textContent = aiResult.suggestions;
+            
+            // 顯示評分要點
+            const keyPointsList = document.getElementById('keyPointsList');
+            keyPointsList.innerHTML = '';
+            questions[currentQuestion].keyPoints.forEach(point => {
+                const li = document.createElement('li');
+                li.textContent = point;
+                if (aiResult.matchedPoints.includes(point)) {
+                    li.style.color = '#90EE90';
+                    li.textContent += ' ✓';
+                }
+                keyPointsList.appendChild(li);
+            });
+            
+            userScores[currentQuestion] = aiResult.score;
+            document.getElementById('showRefBtn').style.display = 'inline-block';
+            document.getElementById('submitBtn').disabled = false;
+            
+            updateStats();
+        }
+
+        function getScoreColor(score) {
+            if (score >= 8) return '#26de81';
+            if (score >= 6) return '#4facfe';
+            if (score >= 4) return '#ffa726';
+            return '#ef5350';
+        }
+
+        function showReference() {
+            document.getElementById('referenceAnswer').style.display = 'block';
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                loadQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                loadQuestion();
+            }
+        }
+
+        function updateNavigation() {
+            document.getElementById('prevBtn').disabled = currentQuestion === 0;
+            document.getElementById('nextBtn').disabled = currentQuestion === questions.length - 1;
+        }
+
+        function updateStats() {
+            const completed = userScores.filter(score => score !== undefined).length;
+            const average = completed > 0 ? 
+                (userScores.reduce((sum, score) => sum + (score || 0), 0) / completed).toFixed(1) : 0;
+            
+            document.getElementById('completedQuestions').textContent = completed;
+            document.getElementById('averageScore').textContent = average;
+        }
+
+        // 初始化
+        document.getElementById('totalQuestions').textContent = questions.length;
+    </script>
+</body>
+</html>
